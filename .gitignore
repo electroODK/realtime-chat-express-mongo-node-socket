@@ -1,0 +1,64 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+log.txt
+debug.log
+
+# Dependency directories
+bower_components/
+
+# Build output
+dist/
+build/
+out/
+
+# VS Code
+.vscode/
+.history/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Linux
+*~
+
+# Optional npm cache directory
+.npm/
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# MongoDB dumps or data
+dump/
+*.gz
+
+# Frontend dev server
+.cache/
+*.swp
+
+# JetBrains IDE (WebStorm, IntelliJ)
+.idea/
+*.iml
+
+# Optional: uploads if you're storing local files
+uploads/
+
+# Optional: logs or temp folders
+tmp/
+temp/
