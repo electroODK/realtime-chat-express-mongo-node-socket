@@ -30,7 +30,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
     const fetchGroup = async () => {
       try {
         const res = await axios.get(
-          `/api/groups/${groupId}/user/${currentUser._id}`
+          `https://6fbf-5-133-123-139.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`
         );
 
         setGroup(res.data);
@@ -65,7 +65,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`/api/messages/${groupId}`);
+        const res = await axios.get(`https://6fbf-5-133-123-139.ngrok-free.app/api/messages/${groupId}`);
         setMessages(res.data);
       } catch (err) {
         console.error('Ошибка получения сообщений:', err);
@@ -84,7 +84,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
       };
 
       try {
-        await axios.post('/api/messages', message);
+        await axios.post('https://6fbf-5-133-123-139.ngrok-free.app/api/messages', message);
       } catch (err) {
         console.error('Ошибка при отправке сообщения:', err);
       }
@@ -95,7 +95,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
 
   const handleAddUser = async (userId) => {
     try {
-      await axios.post(`/api/groups/${groupId}/add-user`, {
+      await axios.post(`https://6fbf-5-133-123-139.ngrok-free.app/api/groups/${groupId}/add-user`, {
         userId,
         requesterId: currentUser._id,
       });

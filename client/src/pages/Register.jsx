@@ -18,7 +18,7 @@ const Register = ({ onSuccess }) => {
     setError('');
 
     try {
-      const res = await axios.post('/api/users/register', form);
+      const res = await axios.post('https://6fbf-5-133-123-139.ngrok-free.app/api/users/register', form);
       onSuccess(res.data);
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';

@@ -21,7 +21,7 @@ const App = () => {
       if (!currentUser) return;
 
       try {
-        const res = await fetch(`/api/groups/by-user/${currentUser._id}`);
+        const res = await fetch(`https://6fbf-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`);
         if (!res.ok) throw new Error('Ошибка загрузки групп');
 
         const data = await res.json();

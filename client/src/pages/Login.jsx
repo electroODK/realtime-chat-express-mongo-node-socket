@@ -10,7 +10,7 @@ const Login = ({ onSuccess }) => {
     setError('');
 
     try {
-      const res = await axios.post('/api/users/login', form);
+      const res = await axios.post('https://6fbf-5-133-123-139.ngrok-free.app/api/users/login', form);
       onSuccess(res.data.user); 
     } catch (err) {
       const msg = err.response?.data?.message || 'Ошибка входа';
