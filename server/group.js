@@ -12,7 +12,7 @@ const run = async () => {
 
     //ID существующего пользователя
     const userId = '6865834b745fad7af3fc1a57';
-    const userId2 = "6867a63db498413b570868b8"
+    const userId2 = "686a257fba69374a12ad1134"
 
     const user = await UserModel.findById(userId);
     const user2 = await UserModel.findById(userId2);
