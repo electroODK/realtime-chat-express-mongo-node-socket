@@ -15,66 +15,73 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
   const partnerVideo = useRef();
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream);
-        if (myVideo.current) myVideo.current.srcObject = currentStream;
+    let currentStream;
 
-        socket.emit('join-video-room', groupId);
+    const startMedia = async () => {
+      currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setStream(currentStream);
+      if (myVideo.current) myVideo.current.srcObject = currentStream;
 
-        socket.on('user-joined', (partnerId) => {
-          const peer = new Peer({
-            initiator: true,
-            trickle: false,
-            stream: currentStream,
-          });
+      socket.emit('join-video-room', groupId);
+    };
 
-          peer.on('signal', (signalData) => {
-            socket.emit('video-signal', {
-              to: partnerId,
-              from: socket.id,
-              signal: signalData,
-            });
-          });
+    startMedia();
 
-          peer.on('stream', (partnerStream) => {
-            if (partnerVideo.current)
-              partnerVideo.current.srcObject = partnerStream;
-          });
+    socket.on('user-joined', (partnerId) => {
+      if (peer) return; // предотвратить дублирование
 
-          setPeer(peer);
-          setCallStarted(true);
-        });
+      const newPeer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream: currentStream,
+      });
 
-        socket.on('video-signal', ({ from, signal }) => {
-          const peer = new Peer({
-            initiator: false,
-            trickle: false,
-            stream: currentStream,
-          });
-
-          peer.on('signal', (signalData) => {
-            socket.emit('video-signal', {
-              to: from,
-              from: socket.id,
-              signal: signalData,
-            });
-          });
-
-          peer.on('stream', (partnerStream) => {
-            if (partnerVideo.current)
-              partnerVideo.current.srcObject = partnerStream;
-          });
-
-          peer.signal(signal);
-          setPeer(peer);
-          setCallStarted(true);
+      newPeer.on('signal', (signalData) => {
+        socket.emit('video-signal', {
+          to: partnerId,
+          from: socket.id,
+          signal: signalData,
         });
       });
 
+      newPeer.on('stream', (partnerStream) => {
+        if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
+      });
+
+      setPeer(newPeer);
+      setCallStarted(true);
+    });
+
+    socket.on('video-signal', ({ from, signal }) => {
+      if (peer) return;
+
+      const newPeer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: currentStream,
+      });
+
+      newPeer.on('signal', (signalData) => {
+        socket.emit('video-signal', {
+          to: from,
+          from: socket.id,
+          signal: signalData,
+        });
+      });
+
+      newPeer.on('stream', (partnerStream) => {
+        if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
+      });
+
+      newPeer.signal(signal);
+      setPeer(newPeer);
+      setCallStarted(true);
+    });
+
     return () => {
       leaveCall();
+      socket.off('user-joined');
+      socket.off('video-signal');
     };
   }, []);
 
