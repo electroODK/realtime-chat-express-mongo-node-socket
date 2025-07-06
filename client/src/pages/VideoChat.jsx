@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
 
-const socket = io('https://6fbf-5-133-123-139.ngrok-free.app'); 
+const socket = io('https://3d2f-5-133-123-139.ngrok-free.app');
 
 const VideoChat = ({ currentUser, groupId, onClose }) => {
   const [stream, setStream] = useState(null);
@@ -13,59 +13,63 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
   const partnerVideo = useRef();
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((currentStream) => {
-      setStream(currentStream);
-      if (myVideo.current) myVideo.current.srcObject = currentStream;
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((currentStream) => {
+        setStream(currentStream);
+        if (myVideo.current) myVideo.current.srcObject = currentStream;
 
-      socket.emit('join-video-room', groupId);
+        socket.emit('join-video-room', groupId);
 
-      socket.on('user-joined', (partnerId) => {
-        const peer = new Peer({
-          initiator: true,
-          trickle: false,
-          stream: currentStream,
-        });
-
-        peer.on('signal', (signalData) => {
-          socket.emit('video-signal', {
-            to: partnerId,
-            from: socket.id,
-            signal: signalData,
+        socket.on('user-joined', (partnerId) => {
+          const peer = new Peer({
+            initiator: true,
+            trickle: false,
+            stream: currentStream,
           });
-        });
 
-        peer.on('stream', (partnerStream) => {
-          if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
-        });
-
-        setPeer(peer);
-        setCallStarted(true);
-      });
-
-      socket.on('video-signal', ({ from, signal }) => {
-        const peer = new Peer({
-          initiator: false,
-          trickle: false,
-          stream: currentStream,
-        });
-
-        peer.on('signal', (signalData) => {
-          socket.emit('video-signal', {
-            to: from,
-            from: socket.id,
-            signal: signalData,
+          peer.on('signal', (signalData) => {
+            socket.emit('video-signal', {
+              to: partnerId,
+              from: socket.id,
+              signal: signalData,
+            });
           });
+
+          peer.on('stream', (partnerStream) => {
+            if (partnerVideo.current)
+              partnerVideo.current.srcObject = partnerStream;
+          });
+
+          setPeer(peer);
+          setCallStarted(true);
         });
 
-        peer.on('stream', (partnerStream) => {
-          if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
-        });
+        socket.on('video-signal', ({ from, signal }) => {
+          const peer = new Peer({
+            initiator: false,
+            trickle: false,
+            stream: currentStream,
+          });
 
-        peer.signal(signal);
-        setPeer(peer);
-        setCallStarted(true);
+          peer.on('signal', (signalData) => {
+            socket.emit('video-signal', {
+              to: from,
+              from: socket.id,
+              signal: signalData,
+            });
+          });
+
+          peer.on('stream', (partnerStream) => {
+            if (partnerVideo.current)
+              partnerVideo.current.srcObject = partnerStream;
+          });
+
+          peer.signal(signal);
+          setPeer(peer);
+          setCallStarted(true);
+        });
       });
-    });
 
     return () => {
       leaveCall();
@@ -93,7 +97,12 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
 
       <div style={{ marginTop: '10px' }}>
         {callStarted ? (
-          <button onClick={() => { leaveCall(); onClose(); }}>
+          <button
+            onClick={() => {
+              leaveCall();
+              onClose();
+            }}
+          >
             Завершить звонок
           </button>
         ) : (

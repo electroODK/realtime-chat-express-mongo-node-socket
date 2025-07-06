@@ -18,7 +18,14 @@ const Register = ({ onSuccess }) => {
     setError('');
 
     try {
-      const res = await axios.post('https://6fbf-5-133-123-139.ngrok-free.app/api/users/register', form);
+      const res = await axios.post(
+        'https://3d2f-5-133-123-139.ngrok-free.app/api/users/register',
+        form,{
+          headers:{
+            "ngrok-skip-browser-warning": true
+          }
+        }
+      );
       onSuccess(res.data);
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
@@ -27,7 +34,11 @@ const Register = ({ onSuccess }) => {
   };
 
   return (
-    <form className='form' onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto' }}>
+    <form
+      className="form"
+      onSubmit={handleSubmit}
+      style={{ maxWidth: 400, margin: '0 auto' }}
+    >
       <h2>Регистрация</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <input

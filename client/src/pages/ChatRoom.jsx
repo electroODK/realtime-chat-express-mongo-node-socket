@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io('https://6fbf-5-133-123-139.ngrok-free.app');
+const socket = io('https://3d2f-5-133-123-139.ngrok-free.app');
 
 const ChatRoom = ({ groupId, currentUser }) => {
   const [group, setGroup] = useState(null);
@@ -30,7 +30,12 @@ const ChatRoom = ({ groupId, currentUser }) => {
     const fetchGroup = async () => {
       try {
         const res = await axios.get(
-          `https://6fbf-5-133-123-139.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`
+          `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': true,
+            },
+          }
         );
 
         setGroup(res.data);
@@ -46,7 +51,11 @@ const ChatRoom = ({ groupId, currentUser }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('/api/users');
+        const res = await axios.get(`https://3d2f-5-133-123-139.ngrok-free.app/api/users`,{
+          headers:{
+            "ngrok-skip-browser-warning": true
+          }
+        });
         setAllUsers(res.data);
       } catch (err) {
         console.error('Ошибка получения юзеров:', err);
@@ -65,7 +74,14 @@ const ChatRoom = ({ groupId, currentUser }) => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`https://6fbf-5-133-123-139.ngrok-free.app/api/messages/${groupId}`);
+        const res = await axios.get(
+          `https://3d2f-5-133-123-139.ngrok-free.app/api/messages/${groupId}`,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': true,
+            },
+          }
+        );
         setMessages(res.data);
       } catch (err) {
         console.error('Ошибка получения сообщений:', err);
@@ -84,7 +100,15 @@ const ChatRoom = ({ groupId, currentUser }) => {
       };
 
       try {
-        await axios.post('https://6fbf-5-133-123-139.ngrok-free.app/api/messages', message);
+        await axios.post(
+          'https://3d2f-5-133-123-139.ngrok-free.app/api/messages',
+          message,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': true,
+            },
+          }
+        );
       } catch (err) {
         console.error('Ошибка при отправке сообщения:', err);
       }
@@ -95,10 +119,18 @@ const ChatRoom = ({ groupId, currentUser }) => {
 
   const handleAddUser = async (userId) => {
     try {
-      await axios.post(`https://6fbf-5-133-123-139.ngrok-free.app/api/groups/${groupId}/add-user`, {
-        userId,
-        requesterId: currentUser._id,
-      });
+      await axios.post(
+        `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/${groupId}/add-user`,
+        {
+          userId,
+          requesterId: currentUser._id,
+        },
+        {
+          headers: {
+            'ngrok-skip-browser-warning': true,
+          },
+        }
+      );
 
       alert('Пользователь добавлен!');
       setGroup((prev) => ({
@@ -142,7 +174,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
             <div key={idx}>
               <strong>
                 {senderId === currentUser._id ? 'Вы' : senderName}
-              </strong> 
+              </strong>
               : {msg.text}
               <span style={{ float: 'right', fontSize: '0.8em' }}>
                 {timeString}
