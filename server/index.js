@@ -13,7 +13,7 @@ import { initSocket } from './socket.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: 'http://192.168.10.168:5173/', credentials: true }));
+app.use(cors({ origin: 'https://realtime-chat-express-mongo-node-so.vercel.app/', credentials: true }));
 app.use(express.json());
 
 const server = http.createServer(app);
