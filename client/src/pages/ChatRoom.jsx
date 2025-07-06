@@ -33,7 +33,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
           `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`,
           {
             headers: {
-              'ngrok-skip-browser-warning': true,
+              'ngrok-skip-browser-warning': 'true',
             },
           }
         );
@@ -53,7 +53,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
       try {
         const res = await axios.get(`https://3d2f-5-133-123-139.ngrok-free.app/api/users`,{
           headers:{
-            "ngrok-skip-browser-warning": true
+            "ngrok-skip-browser-warning": 'true'
           }
         });
         setAllUsers(res.data);
@@ -78,7 +78,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
           `https://3d2f-5-133-123-139.ngrok-free.app/api/messages/${groupId}`,
           {
             headers: {
-              'ngrok-skip-browser-warning': true,
+              'ngrok-skip-browser-warning': 'true',
             },
           }
         );
@@ -105,7 +105,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
           message,
           {
             headers: {
-              'ngrok-skip-browser-warning': true,
+              'ngrok-skip-browser-warning': 'true',
             },
           }
         );
@@ -127,7 +127,7 @@ const ChatRoom = ({ groupId, currentUser }) => {
         },
         {
           headers: {
-            'ngrok-skip-browser-warning': true,
+            'ngrok-skip-browser-warning': 'true',
           },
         }
       );

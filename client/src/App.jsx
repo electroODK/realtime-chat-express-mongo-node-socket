@@ -21,12 +21,12 @@ const App = () => {
       if (!currentUser) return;
 
       try {
-        const res = await fetch(`https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`,{
-          headers:{
-            "ngrok-skip-browser-warning": true
-          }
-        });
-        console.log(res.json());
+const res = await fetch(`https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`, {
+  headers: {
+    "ngrok-skip-browser-warning": "true"
+  }
+});
+
         
         if (!res.ok) throw new Error('Ошибка загрузки групп');
 
