@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
 
-const socket = io('https://3d2f-5-133-123-139.ngrok-free.app');
+const socket = io('https://3d2f-5-133-123-139.ngrok-free.app', {
+  transports: ['websocket'],
+});
 
 const VideoChat = ({ currentUser, groupId, onClose }) => {
   const [stream, setStream] = useState(null);

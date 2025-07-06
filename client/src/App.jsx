@@ -9,7 +9,7 @@ const App = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
-  const [showVideoChat, setShowVideoChat] = useState(false); // ➕
+  const [showVideoChat, setShowVideoChat] = useState(false);
 
   const handleLoginOrRegister = (user) => {
     setCurrentUser(user);
@@ -21,16 +21,20 @@ const App = () => {
       if (!currentUser) return;
 
       try {
-const res = await fetch(`https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`, {
-  headers: {
-    "ngrok-skip-browser-warning": "true"
-  }
-});
+        const res = await fetch(
+          `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+          }
+        );
 
-        
-        if (!res.ok) throw new Error('Ошибка загрузки групп');
+        if (!res.ok) {
+          throw new Error(`Ошибка загрузки групп: ${res.status}`);
+        }
 
-        const data = await res.json();
+        const data = await res.json(); // ✅ вызываем json только один раз
         setGroups(data);
       } catch (err) {
         console.error('Не удалось получить группы:', err.message);
@@ -42,15 +46,13 @@ const res = await fetch(`https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by
 
   if (!currentUser) {
     return (
-      <div className='signblock'>
+      <div className="signblock">
         {showLogin ? (
           <>
             <Login onSuccess={handleLoginOrRegister} />
             <p>
               Нет аккаунта?{' '}
-              <button onClick={() => setShowLogin(false)}>
-                Зарегистрироваться
-              </button>
+              <button onClick={() => setShowLogin(false)}>Зарегистрироваться</button>
             </p>
           </>
         ) : (
@@ -72,14 +74,14 @@ const res = await fetch(`https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by
 
       <h3>Ваши группы:</h3>
       <div className="chatview">
-        <div className='chatlist'>
+        <div className="chatlist">
           {groups.length === 0 ? (
             <p>Вы не состоите ни в одной группе</p>
           ) : (
             groups.map((group) => (
               <div key={group._id} style={{ marginBottom: '10px' }}>
                 <button
-                  className='chat-button'
+                  className="chat-button"
                   onClick={() => {
                     setSelectedGroupId(group._id);
                     setShowVideoChat(false);
