@@ -7,17 +7,19 @@ import connectDB from './connectDB.js';
 import userRoutes from './routes/user.routes.js';
 import groupRoutes from './routes/group.routes.js';
 import messageRoutes from './routes/message.routes.js';
+import videoRoutes from './routes/video.routes.js';
 
 import { initSocket } from './socket.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: 'http://192.168.10.168:5173/', credentials: true }));
 app.use(express.json());
 
 const server = http.createServer(app);
 initSocket(server);  
 
+app.use('/api/video', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/messages', messageRoutes);
@@ -25,7 +27,9 @@ app.use('/api/messages', messageRoutes);
 const PORT = process.env.PORT || 4545;
 
 connectDB().then(() => {
-  server.listen(PORT, () => {
+  console.log('mongoDB connected');
+  
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
   });
 });

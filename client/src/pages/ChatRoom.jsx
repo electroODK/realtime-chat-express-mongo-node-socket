@@ -10,13 +10,11 @@ const ChatRoom = ({ groupId, currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
 
-
   useEffect(() => {
     if (groupId) {
       socket.emit('joinGroup', groupId);
     }
   }, [groupId]);
-
 
   useEffect(() => {
     socket.on('newMessage', (message) => {
@@ -134,13 +132,17 @@ const ChatRoom = ({ groupId, currentUser }) => {
               : 'Неизвестный';
 
           const createdAt = msg.createdAt ? new Date(msg.createdAt) : null;
-          const timeString = createdAt?.toLocaleTimeString() || '—';
+          const timeString =
+            createdAt?.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) || '—';
 
           return (
             <div key={idx}>
               <strong>
                 {senderId === currentUser._id ? 'Вы' : senderName}
-              </strong>{' '}
+              </strong> 
               : {msg.text}
               <span style={{ float: 'right', fontSize: '0.8em' }}>
                 {timeString}

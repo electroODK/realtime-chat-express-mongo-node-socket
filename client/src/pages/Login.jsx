@@ -22,7 +22,7 @@ const Login = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className='form' onSubmit={handleSubmit}>
       <h2>Вход</h2>
       <input
         type="email"

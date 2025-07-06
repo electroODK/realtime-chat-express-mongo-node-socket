@@ -27,7 +27,7 @@ const Register = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto' }}>
+    <form className='form' onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto' }}>
       <h2>Регистрация</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <input
