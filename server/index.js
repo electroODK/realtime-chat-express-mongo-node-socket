@@ -13,11 +13,17 @@ import { initSocket } from './socket.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: 'https://realtime-chat-express-mongo-node-so.vercel.app/', credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 const server = http.createServer(app);
-initSocket(server);  
+initSocket(server);
 
 app.use('/api/video', videoRoutes);
 app.use('/api/users', userRoutes);
@@ -28,7 +34,7 @@ const PORT = process.env.PORT || 4545;
 
 connectDB().then(() => {
   console.log('mongoDB connected');
-  
+
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
   });
