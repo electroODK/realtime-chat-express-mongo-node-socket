@@ -1,9 +1,10 @@
-// socket.js
 import { Server } from 'socket.io';
 import MessageModel from '../models/message.model.js';
 import GroupModel from '../models/group.model.js';
 
 let io;
+
+const usersInRoom = {}; // { roomId: [socketId, ...] }
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -45,29 +46,52 @@ export const initSocket = (server) => {
       }
     });
 
-    // ==== Видео-комната (без инициатора, многопользовательская) ====
+    // ==== Видео-комната ====
     socket.on('join-video-room', ({ roomId, userId }) => {
-      socket.join(roomId);
-      console.log(`📹 User ${userId} (${socket.id}) joined video room ${roomId}`);
+      if (!roomId || !userId) {
+        console.warn('⚠️ join-video-room: Некорректные данные');
+        return;
+      }
 
-      // Оповестить других о новом участнике
-      socket.to(roomId).emit('user-connected', { socketId: socket.id, userId });
+      socket.join(roomId);
+      console.log(`📹 ${userId} (${socket.id}) joined room ${roomId}`);
+
+      // Регистрируем юзера в комнате
+      if (!usersInRoom[roomId]) {
+        usersInRoom[roomId] = [];
+      }
+
+      // Отправляем новому пользователю список остальных
+      const otherUsers = usersInRoom[roomId].filter((id) => id !== socket.id);
+      socket.emit('all-users', otherUsers);
+
+      usersInRoom[roomId].push(socket.id);
+
+      // Оповещаем остальных о новом юзере
+      socket.to(roomId).emit('user-connected', {
+        socketId: socket.id,
+        userId,
+      });
     });
 
     socket.on('signal', ({ to, from, signal }) => {
       io.to(to).emit('signal', { from, signal });
     });
 
-    socket.on('leave-video-room', (roomId) => {
-      socket.leave(roomId);
-      socket.to(roomId).emit('user-disconnected', socket.id);
-      console.log(`📴 User ${socket.id} left video room ${roomId}`);
-    });
-
     socket.on('disconnecting', () => {
       const rooms = [...socket.rooms].filter((r) => r !== socket.id);
+
       rooms.forEach((roomId) => {
         socket.to(roomId).emit('user-disconnected', socket.id);
+
+        if (usersInRoom[roomId]) {
+          usersInRoom[roomId] = usersInRoom[roomId].filter((id) => id !== socket.id);
+
+          // Если в комнате больше никого — удалить ключ
+          if (usersInRoom[roomId].length === 0) {
+            delete usersInRoom[roomId];
+          }
+        }
       });
     });
 

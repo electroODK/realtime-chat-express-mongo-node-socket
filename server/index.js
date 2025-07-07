@@ -7,7 +7,6 @@ import connectDB from './utils/connectDB.js';
 import userRoutes from './routes/user.routes.js';
 import groupRoutes from './routes/group.routes.js';
 import messageRoutes from './routes/message.routes.js';
-import videoRoutes from './routes/video.routes.js';
 
 import { initSocket } from './utils/socket.js';
 dotenv.config();
@@ -20,7 +19,6 @@ app.use(express.json());
 const server = http.createServer(app);
 initSocket(server);
 
-app.use('/api/video', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/messages', messageRoutes);
