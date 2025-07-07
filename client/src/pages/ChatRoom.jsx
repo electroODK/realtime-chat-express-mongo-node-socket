@@ -1,145 +1,219 @@
-import { useEffect, useRef, useState } from 'react';
-import io from 'socket.io-client';
-import Peer from 'simple-peer';
+  import { useEffect, useState } from 'react';
+  import io from 'socket.io-client';
+  import axios from 'axios';
 
-const socket = io('https://c45d-188-113-200-157.ngrok-free.app', {
+  const socket = io('https://c45d-188-113-200-157.ngrok-free.app',{
   transports: ['websocket'],
 });
 
-const VideoChat = ({ roomId, currentUser }) => {
-  const [peers, setPeers] = useState([]);
-  const userVideo = useRef();
-  const peersRef = useRef([]);
-  const streamRef = useRef();
+  const ChatRoom = ({ groupId, currentUser }) => {
+    const [group, setGroup] = useState(null);
+    const [allUsers, setAllUsers] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [text, setText] = useState('');
 
-  useEffect(() => {
-    const init = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
-      streamRef.current = stream;
-      if (userVideo.current) userVideo.current.srcObject = stream;
-
-      if (!roomId || !currentUser?._id) {
-        console.warn('⚠️ join-video-room: Некорректные данные', {
-          roomId,
-          userId: currentUser?._id,
-        });
-        return;
+    useEffect(() => {
+      if (groupId) {
+        socket.emit('joinGroup', groupId);
       }
+    }, [groupId]);
 
-      socket.emit('join-video-room', {
-        roomId,
-        userId: currentUser._id,
+    useEffect(() => {
+      socket.on('newMessage', (message) => {
+        setMessages((prev) => [...prev, message]);
       });
 
-      socket.on('all-users', (users) => {
-        const newPeers = [];
-        users.forEach((userId) => {
-          const peer = createPeer(userId, socket.id, stream);
-          peersRef.current.push({ peerId: userId, peer });
-          newPeers.push({ peerId: userId, peer });
-        });
-        setPeers(newPeers);
-      });
+      return () => {
+        socket.off('newMessage');
+      };
+    }, []);
 
-      socket.on('user-connected', ({ socketId: userId }) => {
-        const peer = addPeer(userId, stream);
-        peersRef.current.push({ peerId: userId, peer });
-        setPeers((prev) => [...prev, { peerId: userId, peer }]);
-      });
+    useEffect(() => {
+      const fetchGroup = async () => {
+        try {
+          const res = await axios.get(
+            `https://c45d-188-113-200-157.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`,
+            {
+              headers: {
+                'ngrok-skip-browser-warning': 'true',
+              },
+            }
+          );
 
-      socket.on('signal', ({ from, signal }) => {
-        const item = peersRef.current.find((p) => p.peerId === from);
-        if (item) item.peer.signal(signal);
-      });
+          setGroup(res.data);
+          setMessages(res.data.messages || []);
+        } catch (err) {
+          console.error('Ошибка получения группы:', err.response?.data || err);
+        }
+      };
 
-      socket.on('user-disconnected', (userId) => {
-        const peerObj = peersRef.current.find((p) => p.peerId === userId);
-        if (peerObj) peerObj.peer.destroy();
+      fetchGroup();
+    }, [groupId, currentUser]);
 
-        peersRef.current = peersRef.current.filter((p) => p.peerId !== userId);
-        setPeers((prev) => prev.filter((p) => p.peerId !== userId));
-      });
+    useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          const res = await axios.get(`https://c45d-188-113-200-157.ngrok-free.app/api/users`,{
+            headers:{
+              "ngrok-skip-browser-warning": 'true'
+            }
+          });
+          setAllUsers(res.data);
+        } catch (err) {
+          console.error('Ошибка получения юзеров:', err);
+        }
+      };
+
+      fetchUsers();
+    }, []);
+
+    const isAdmin = group?.admins?.some(
+      (id) =>
+        id === currentUser._id ||
+        (typeof id === 'object' && id._id === currentUser._id)
+    );
+
+    useEffect(() => {
+      const fetchMessages = async () => {
+        try {
+          const res = await axios.get(
+            `https://c45d-188-113-200-157.ngrok-free.app/api/messages/${groupId}`,
+            {
+              headers: {
+                'ngrok-skip-browser-warning': 'true',
+              },
+            }
+          );
+          setMessages(res.data);
+        } catch (err) {
+          console.error('Ошибка получения сообщений:', err);
+        }
+      };
+
+      fetchMessages();
+    }, [groupId]);
+
+    const handleSend = async () => {
+      if (text.trim()) {
+        const message = {
+          text,
+          groupId,
+          sender: currentUser._id,
+        };
+
+        try {
+          await axios.post(
+            'https://c45d-188-113-200-157.ngrok-free.app/api/messages',
+            message,
+            {
+              headers: {
+                'ngrok-skip-browser-warning': 'true',
+              },
+            }
+          );
+        } catch (err) {
+          console.error('Ошибка при отправке сообщения:', err);
+        }
+
+        setText('');
+      }
     };
 
-    init();
+    const handleAddUser = async (userId) => {
+      try {
+        await axios.post(
+          `https://c45d-188-113-200-157.ngrok-free.app/api/groups/${groupId}/add-user`,
+          {
+            userId,
+            requesterId: currentUser._id,
+          },
+          {
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+          }
+        );
 
-    return () => {
-      socket.disconnect();
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      peersRef.current.forEach(({ peer }) => peer.destroy());
+        alert('Пользователь добавлен!');
+        setGroup((prev) => ({
+          ...prev,
+          users: [...prev.users, { _id: userId }],
+        }));
+      } catch (err) {
+        alert(err.response?.data?.message || 'Ошибка');
+      }
     };
-  }, [roomId, currentUser._id]);
 
-  const createPeer = (targetId, callerId, stream) => {
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream,
-    });
+    if (!group) return <p>Загрузка группы...</p>;
 
-    peer.on('signal', (signal) => {
-      socket.emit('signal', {
-        to: targetId,
-        from: callerId,
-        signal,
-      });
-    });
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2>{group.name}</h2>
 
-    return peer;
-  };
+        <div
+          style={{
+            maxHeight: '300px',
+            overflowY: 'auto',
+            border: '1px solid #ccc',
+            padding: '10px',
+          }}
+        >
+          {messages.map((msg, idx) => {
+            const senderId = msg.sender?._id || msg.sender;
+            const senderName =
+              typeof msg.sender === 'object' && msg.sender?.name
+                ? msg.sender.name
+                : 'Неизвестный';
 
-  const addPeer = (incomingId, stream) => {
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream,
-    });
+            const createdAt = msg.createdAt ? new Date(msg.createdAt) : null;
+            const timeString =
+              createdAt?.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }) || '—';
 
-    peer.on('signal', (signal) => {
-      socket.emit('signal', {
-        to: incomingId,
-        from: socket.id,
-        signal,
-      });
-    });
+            return (
+              <div key={idx}>
+                <strong>
+                  {senderId === currentUser._id ? 'Вы' : senderName}
+                </strong>
+                : {msg.text}
+                <span style={{ float: 'right', fontSize: '0.8em' }}>
+                  {timeString}
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
-    return peer;
-  };
-
-  return (
-    <div>
-      <h3>Комната видеочата: {roomId}</h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-        <video
-          ref={userVideo}
-          autoPlay
-          muted
-          playsInline
-          width={200}
-          style={{ border: '2px solid green' }}
+        <input
+          type="text"
+          placeholder="Написать сообщение"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
         />
-        {peers.map(({ peerId, peer }) => (
-          <Video key={peerId} peer={peer} />
-        ))}
+        <button onClick={handleSend}>Отправить</button>
+
+        {isAdmin && (
+          <div style={{ marginTop: '20px' }}>
+            <h4>Добавить пользователя в группу:</h4>
+            {allUsers
+              .filter((u) => !group.users.some((gu) => gu._id === u._id))
+              .map((u) => (
+                <div key={u._id} style={{ marginBottom: '5px' }}>
+                  {u.name}
+                  <button
+                    style={{ marginLeft: '10px' }}
+                    onClick={() => handleAddUser(u._id)}
+                  >
+                    Добавить
+                  </button>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-const Video = ({ peer }) => {
-  const ref = useRef();
-
-  useEffect(() => {
-    peer.on('stream', (stream) => {
-      if (ref.current) ref.current.srcObject = stream;
-    });
-  }, [peer]);
-
-  return <video ref={ref} autoPlay playsInline width={200} />;
-};
-
-export default VideoChat;
+  export default ChatRoom;
