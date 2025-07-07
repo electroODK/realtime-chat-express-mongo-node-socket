@@ -56,6 +56,11 @@ const VideoChat = ({ roomId, currentUser }) => {
         if (item) item.peer.signal(signal);
       });
 
+      socket.on('return-signal', ({ from, signal }) => {
+        const item = peersRef.current.find((p) => p.peerId === from);
+        if (item) item.peer.signal(signal);
+      });
+
       socket.on('user-disconnected', (userId) => {
         const peerObj = peersRef.current.find((p) => p.peerId === userId);
         if (peerObj) peerObj.peer.destroy();
