@@ -34,7 +34,7 @@ const App = () => {
           throw new Error(`Ошибка загрузки групп: ${res.status}`);
         }
 
-        const data = await res.json(); // ✅ вызываем json только один раз
+        const data = await res.json();
         setGroups(data);
       } catch (err) {
         console.error('Не удалось получить группы:', err.message);
@@ -70,6 +70,10 @@ const App = () => {
     );
   }
 
+  // 🔍 Для отладки
+  console.log('selectedGroupId:', selectedGroupId);
+  console.log('showVideoChat:', showVideoChat);
+
   return (
     <div>
       <h2>Добро пожаловать, {currentUser.name}!</h2>
@@ -86,7 +90,7 @@ const App = () => {
                   className="chat-button"
                   onClick={() => {
                     setSelectedGroupId(group._id);
-                    setShowVideoChat(false);
+                    setShowVideoChat(false); // ЧАТ
                   }}
                 >
                   💬 {group.name || `Группа ${group._id.slice(-5)}`}
@@ -95,7 +99,7 @@ const App = () => {
                   style={{ marginLeft: '10px' }}
                   onClick={() => {
                     setSelectedGroupId(group._id);
-                    setShowVideoChat(true);
+                    setShowVideoChat(true); // ВИДЕОЧАТ
                   }}
                 >
                   📹 Видеочат
@@ -105,13 +109,23 @@ const App = () => {
           )}
         </div>
 
-        {selectedGroupId && !showVideoChat && (
-          <ChatRoom groupId={selectedGroupId} currentUser={currentUser} />
-        )}
+        {/* ====== Контент ====== */}
+        <div className="chat-content" style={{ flex: 1 }}>
+          {selectedGroupId && !showVideoChat && (
+            <ChatRoom groupId={selectedGroupId} currentUser={currentUser} />
+          )}
 
-        {selectedGroupId && showVideoChat && (
-          <VideoChat roomId={selectedGroupId} currentUser={currentUser} />
-        )}
+          {selectedGroupId && showVideoChat && (
+            <>
+              <VideoChat roomId={selectedGroupId} currentUser={currentUser} />
+              <div style={{ marginTop: '10px' }}>
+                <button onClick={() => setShowVideoChat(false)}>
+                  ⬅ Вернуться в чат
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
