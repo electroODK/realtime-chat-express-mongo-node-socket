@@ -2,7 +2,6 @@
 import { Server } from 'socket.io';
 import MessageModel from '../models/message.model.js';
 import GroupModel from '../models/group.model.js';
-import VideoChatModel from '../models/videochat.model.js';
 
 let io;
 
@@ -20,12 +19,12 @@ export const initSocket = (server) => {
     // ==== Чат-комната ====
     socket.on('joinGroup', (groupId) => {
       socket.join(groupId);
-      console.log(`User joined group ${groupId}`);
+      console.log(`User ${socket.id} joined chat group ${groupId}`);
     });
 
     socket.on('sendMessage', async (message) => {
       try {
-        const { groupId, text, userId, time } = message;
+        const { groupId, text, userId } = message;
 
         const newMsg = await MessageModel.create({
           text,
@@ -46,51 +45,32 @@ export const initSocket = (server) => {
       }
     });
 
-    // ==== Видео-комната ====
-    socket.on('join-video-room', async (roomId) => {
+    // ==== Видео-комната (без инициатора, многопользовательская) ====
+    socket.on('join-video-room', ({ roomId, userId }) => {
       socket.join(roomId);
-      socket.to(roomId).emit('user-joined', socket.id);
-      console.log(`User ${socket.id} joined video room ${roomId}`);
+      console.log(`📹 User ${userId} (${socket.id}) joined video room ${roomId}`);
 
-      // при первом входе в комнату — создать запись в БД
-      try {
-        const existing = await VideoChatModel.findOne({
-          groupId: roomId,
-          endedAt: null,
-        });
-
-        if (!existing) {
-          await VideoChatModel.create({
-            groupId: roomId,
-            participants: [],
-          });
-        }
-      } catch (err) {
-        console.error('Ошибка создания видеочата в БД:', err.message);
-      }
+      // Оповестить других о новом участнике
+      socket.to(roomId).emit('user-connected', { socketId: socket.id, userId });
     });
 
-    socket.on('leave-video-room', async (roomId) => {
+    socket.on('signal', ({ to, from, signal }) => {
+      io.to(to).emit('signal', { from, signal });
+    });
+
+    socket.on('leave-video-room', (roomId) => {
       socket.leave(roomId);
-      socket.to(roomId).emit('user-left', socket.id);
-      console.log(`User ${socket.id} left video room ${roomId}`);
-
-      // закрыть текущий видеочат
-      try {
-        await VideoChatModel.findOneAndUpdate(
-          { groupId: roomId, endedAt: null },
-          { endedAt: new Date() }
-        );
-      } catch (err) {
-        console.error('Ошибка закрытия видеочата:', err.message);
-      }
+      socket.to(roomId).emit('user-disconnected', socket.id);
+      console.log(`📴 User ${socket.id} left video room ${roomId}`);
     });
 
-    socket.on('video-signal', ({ to, from, signal }) => {
-      io.to(to).emit('video-signal', { from, signal });
+    socket.on('disconnecting', () => {
+      const rooms = [...socket.rooms].filter((r) => r !== socket.id);
+      rooms.forEach((roomId) => {
+        socket.to(roomId).emit('user-disconnected', socket.id);
+      });
     });
 
-    // ==== Отключение ====
     socket.on('disconnect', () => {
       console.log('🔴 Client disconnected:', socket.id);
     });
