@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 
-const socket = io('https://your-server-url.ngrok-free.app');
+const socket = io('https://c45d-188-113-200-157.ngrok-free.app');
 
 const VideoChat = ({ roomId, currentUser }) => {
   const [peers, setPeers] = useState([]);
