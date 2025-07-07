@@ -22,8 +22,16 @@ const VideoChat = ({ roomId, currentUser }) => {
       streamRef.current = stream;
       if (userVideo.current) userVideo.current.srcObject = stream;
 
+      if (!roomId || !currentUser?._id) {
+        console.warn('⚠️ join-video-room: Некорректные данные', {
+          roomId,
+          userId: currentUser?._id,
+        });
+        return;
+      }
+
       socket.emit('join-video-room', {
-        roomId,
+        roomId: 'test-room',
         userId: currentUser._id,
       });
 

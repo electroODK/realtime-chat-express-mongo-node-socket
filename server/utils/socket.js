@@ -47,32 +47,32 @@ export const initSocket = (server) => {
     });
 
     // ==== Видео-комната ====
-    socket.on('join-video-room', ({ roomId, userId }) => {
-      if (!roomId || !userId) {
-        console.warn('⚠️ join-video-room: Некорректные данные');
+    socket.on('join-video-room', (data) => {
+      if (!data || !data.roomId || !data.userId) {
+        console.warn('⚠️ join-video-room: Некорректные данные', data);
         return;
       }
+
+      const { roomId, userId } = data;
 
       socket.join(roomId);
       console.log(`📹 ${userId} (${socket.id}) joined room ${roomId}`);
 
-      // Регистрируем юзера в комнате
       if (!usersInRoom[roomId]) {
         usersInRoom[roomId] = [];
       }
 
-      // Отправляем новому пользователю список остальных
       const otherUsers = usersInRoom[roomId].filter((id) => id !== socket.id);
       socket.emit('all-users', otherUsers);
 
       usersInRoom[roomId].push(socket.id);
 
-      // Оповещаем остальных о новом юзере
       socket.to(roomId).emit('user-connected', {
         socketId: socket.id,
         userId,
       });
     });
+
 
     socket.on('signal', ({ to, from, signal }) => {
       io.to(to).emit('signal', { from, signal });
