@@ -100,7 +100,7 @@ const VideoChat = ({ roomId, currentUser }) => {
     });
 
     peer.on('signal', (signal) => {
-      socket.emit('signal', {
+      socket.emit('return-signal', {
         to: incomingId,
         from: socket.id,
         signal,

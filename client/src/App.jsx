@@ -12,10 +12,21 @@ const App = () => {
   const [showVideoChat, setShowVideoChat] = useState(false);
 
   const handleLoginOrRegister = (user) => {
+    localStorage.setItem('currentUser', JSON.stringify(user)); // ✅ сохраняем юзера
     setCurrentUser(user);
-    setShowLogin(null);
+    setShowLogin(false);
   };
 
+  // ✅ при старте — восстановление пользователя
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setShowLogin(false);
+    }
+  }, []);
+
+  // ✅ загрузка групп
   useEffect(() => {
     const fetchGroups = async () => {
       if (!currentUser) return;
@@ -70,13 +81,20 @@ const App = () => {
     );
   }
 
-  // 🔍 Для отладки
-  console.log('selectedGroupId:', selectedGroupId);
-  console.log('showVideoChat:', showVideoChat);
-
   return (
     <div>
       <h2>Добро пожаловать, {currentUser.name}!</h2>
+      <button
+        style={{ marginBottom: '10px' }}
+        onClick={() => {
+          localStorage.removeItem('currentUser'); // ✅ удаляем юзера
+          setCurrentUser(null);
+          setSelectedGroupId(null);
+          setShowLogin(true);
+        }}
+      >
+        🔒 Выйти
+      </button>
 
       <h3>Ваши группы:</h3>
       <div className="chatview">
@@ -90,7 +108,7 @@ const App = () => {
                   className="chat-button"
                   onClick={() => {
                     setSelectedGroupId(group._id);
-                    setShowVideoChat(false); // ЧАТ
+                    setShowVideoChat(false);
                   }}
                 >
                   💬 {group.name || `Группа ${group._id.slice(-5)}`}
@@ -99,7 +117,7 @@ const App = () => {
                   style={{ marginLeft: '10px' }}
                   onClick={() => {
                     setSelectedGroupId(group._id);
-                    setShowVideoChat(true); // ВИДЕОЧАТ
+                    setShowVideoChat(true);
                   }}
                 >
                   📹 Видеочат
@@ -109,7 +127,7 @@ const App = () => {
           )}
         </div>
 
-        {/* ====== Контент ====== */}
+        {/* Контент — чат или видеочат */}
         <div className="chat-content" style={{ flex: 1 }}>
           {selectedGroupId && !showVideoChat && (
             <ChatRoom groupId={selectedGroupId} currentUser={currentUser} />

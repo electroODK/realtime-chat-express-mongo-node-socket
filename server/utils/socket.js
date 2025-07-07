@@ -74,9 +74,16 @@ export const initSocket = (server) => {
     });
 
 
-    socket.on('signal', ({ to, from, signal }) => {
-      io.to(to).emit('signal', { from, signal });
-    });
+socket.on('signal', ({ to, from, signal }) => {
+  console.log(`📡 signal от ${from} -> ${to}`);
+  io.to(to).emit('signal', { from, signal });
+});
+
+socket.on('return-signal', ({ to, from, signal }) => {
+  console.log(`↩️ return-signal от ${from} -> ${to}`);
+  io.to(to).emit('signal', { from, signal });
+});
+
 
     socket.on('disconnecting', () => {
       const rooms = [...socket.rooms].filter((r) => r !== socket.id);
