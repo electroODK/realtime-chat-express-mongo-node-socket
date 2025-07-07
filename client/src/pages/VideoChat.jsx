@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
 
-const socket = io('https://3d2f-5-133-123-139.ngrok-free.app', {
+const socket = io('https://c45d-188-113-200-157.ngrok-free.app', {
   transports: ['websocket'],
 });
 
@@ -18,7 +18,10 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
     let currentStream;
 
     const startMedia = async () => {
-      currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      currentStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
       setStream(currentStream);
       if (myVideo.current) myVideo.current.srcObject = currentStream;
 
@@ -28,7 +31,7 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
     startMedia();
 
     socket.on('user-joined', (partnerId) => {
-      if (peer) return; // предотвратить дублирование
+      if (peer) return;
 
       const newPeer = new Peer({
         initiator: true,
@@ -45,7 +48,8 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
       });
 
       newPeer.on('stream', (partnerStream) => {
-        if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
+        if (partnerVideo.current)
+          partnerVideo.current.srcObject = partnerStream;
       });
 
       setPeer(newPeer);
@@ -70,7 +74,8 @@ const VideoChat = ({ currentUser, groupId, onClose }) => {
       });
 
       newPeer.on('stream', (partnerStream) => {
-        if (partnerVideo.current) partnerVideo.current.srcObject = partnerStream;
+        if (partnerVideo.current)
+          partnerVideo.current.srcObject = partnerStream;
       });
 
       newPeer.signal(signal);

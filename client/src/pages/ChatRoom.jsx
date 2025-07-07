@@ -1,132 +1,38 @@
-  import { useEffect, useState } from 'react';
-  import io from 'socket.io-client';
-  import axios from 'axios';
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+import axios from 'axios';
 
-  const socket = io('https://3d2f-5-133-123-139.ngrok-free.app',{
+const socket = io('https://c45d-188-113-200-157.ngrok-free.app', {
   transports: ['websocket'],
 });
 
-  const ChatRoom = ({ groupId, currentUser }) => {
-    const [group, setGroup] = useState(null);
-    const [allUsers, setAllUsers] = useState([]);
-    const [messages, setMessages] = useState([]);
-    const [text, setText] = useState('');
+const ChatRoom = ({ groupId, currentUser }) => {
+  const [group, setGroup] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
 
-    useEffect(() => {
-      if (groupId) {
-        socket.emit('joinGroup', groupId);
-      }
-    }, [groupId]);
+  useEffect(() => {
+    if (groupId) {
+      socket.emit('joinGroup', groupId);
+    }
+  }, [groupId]);
 
-    useEffect(() => {
-      socket.on('newMessage', (message) => {
-        setMessages((prev) => [...prev, message]);
-      });
+  useEffect(() => {
+    socket.on('newMessage', (message) => {
+      setMessages((prev) => [...prev, message]);
+    });
 
-      return () => {
-        socket.off('newMessage');
-      };
-    }, []);
-
-    useEffect(() => {
-      const fetchGroup = async () => {
-        try {
-          const res = await axios.get(
-            `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`,
-            {
-              headers: {
-                'ngrok-skip-browser-warning': 'true',
-              },
-            }
-          );
-
-          setGroup(res.data);
-          setMessages(res.data.messages || []);
-        } catch (err) {
-          console.error('Ошибка получения группы:', err.response?.data || err);
-        }
-      };
-
-      fetchGroup();
-    }, [groupId, currentUser]);
-
-    useEffect(() => {
-      const fetchUsers = async () => {
-        try {
-          const res = await axios.get(`https://3d2f-5-133-123-139.ngrok-free.app/api/users`,{
-            headers:{
-              "ngrok-skip-browser-warning": 'true'
-            }
-          });
-          setAllUsers(res.data);
-        } catch (err) {
-          console.error('Ошибка получения юзеров:', err);
-        }
-      };
-
-      fetchUsers();
-    }, []);
-
-    const isAdmin = group?.admins?.some(
-      (id) =>
-        id === currentUser._id ||
-        (typeof id === 'object' && id._id === currentUser._id)
-    );
-
-    useEffect(() => {
-      const fetchMessages = async () => {
-        try {
-          const res = await axios.get(
-            `https://3d2f-5-133-123-139.ngrok-free.app/api/messages/${groupId}`,
-            {
-              headers: {
-                'ngrok-skip-browser-warning': 'true',
-              },
-            }
-          );
-          setMessages(res.data);
-        } catch (err) {
-          console.error('Ошибка получения сообщений:', err);
-        }
-      };
-
-      fetchMessages();
-    }, [groupId]);
-
-    const handleSend = async () => {
-      if (text.trim()) {
-        const message = {
-          text,
-          groupId,
-          sender: currentUser._id,
-        };
-
-        try {
-          await axios.post(
-            'https://3d2f-5-133-123-139.ngrok-free.app/api/messages',
-            message,
-            {
-              headers: {
-                'ngrok-skip-browser-warning': 'true',
-              },
-            }
-          );
-        } catch (err) {
-          console.error('Ошибка при отправке сообщения:', err);
-        }
-
-        setText('');
-      }
+    return () => {
+      socket.off('newMessage');
     };
+  }, []);
 
-    const handleAddUser = async (userId) => {
+  useEffect(() => {
+    const fetchGroup = async () => {
       try {
-        await axios.post(
-          `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/${groupId}/add-user`,
-          {
-            userId,
-            requesterId: currentUser._id,
-          },
+        const res = await axios.get(
+          `https://c45d-188-113-200-157.ngrok-free.app/api/groups/${groupId}/user/${currentUser._id}`,
           {
             headers: {
               'ngrok-skip-browser-warning': 'true',
@@ -134,86 +40,183 @@
           }
         );
 
-        alert('Пользователь добавлен!');
-        setGroup((prev) => ({
-          ...prev,
-          users: [...prev.users, { _id: userId }],
-        }));
+        setGroup(res.data);
+        setMessages(res.data.messages || []);
       } catch (err) {
-        alert(err.response?.data?.message || 'Ошибка');
+        console.error('Ошибка получения группы:', err.response?.data || err);
       }
     };
 
-    if (!group) return <p>Загрузка группы...</p>;
+    fetchGroup();
+  }, [groupId, currentUser]);
 
-    return (
-      <div style={{ padding: '20px' }}>
-        <h2>{group.name}</h2>
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(
+          `https://c45d-188-113-200-157.ngrok-free.app/api/users`,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+          }
+        );
+        setAllUsers(res.data);
+      } catch (err) {
+        console.error('Ошибка получения юзеров:', err);
+      }
+    };
 
-        <div
-          style={{
-            maxHeight: '300px',
-            overflowY: 'auto',
-            border: '1px solid #ccc',
-            padding: '10px',
-          }}
-        >
-          {messages.map((msg, idx) => {
-            const senderId = msg.sender?._id || msg.sender;
-            const senderName =
-              typeof msg.sender === 'object' && msg.sender?.name
-                ? msg.sender.name
-                : 'Неизвестный';
+    fetchUsers();
+  }, []);
 
-            const createdAt = msg.createdAt ? new Date(msg.createdAt) : null;
-            const timeString =
-              createdAt?.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              }) || '—';
+  const isAdmin = group?.admins?.some(
+    (id) =>
+      id === currentUser._id ||
+      (typeof id === 'object' && id._id === currentUser._id)
+  );
 
-            return (
-              <div key={idx}>
-                <strong>
-                  {senderId === currentUser._id ? 'Вы' : senderName}
-                </strong>
-                : {msg.text}
-                <span style={{ float: 'right', fontSize: '0.8em' }}>
-                  {timeString}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(
+          `https://c45d-188-113-200-157.ngrok-free.app/api/messages/${groupId}`,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+          }
+        );
+        setMessages(res.data);
+      } catch (err) {
+        console.error('Ошибка получения сообщений:', err);
+      }
+    };
 
-        <input
-          type="text"
-          placeholder="Написать сообщение"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button onClick={handleSend}>Отправить</button>
+    fetchMessages();
+  }, [groupId]);
 
-        {isAdmin && (
-          <div style={{ marginTop: '20px' }}>
-            <h4>Добавить пользователя в группу:</h4>
-            {allUsers
-              .filter((u) => !group.users.some((gu) => gu._id === u._id))
-              .map((u) => (
-                <div key={u._id} style={{ marginBottom: '5px' }}>
-                  {u.name}
-                  <button
-                    style={{ marginLeft: '10px' }}
-                    onClick={() => handleAddUser(u._id)}
-                  >
-                    Добавить
-                  </button>
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
-    );
+  const handleSend = async () => {
+    if (text.trim()) {
+      const message = {
+        text,
+        groupId,
+        sender: currentUser._id,
+      };
+
+      try {
+        await axios.post(
+          'https://c45d-188-113-200-157.ngrok-free.app/api/messages',
+          message,
+          {
+            headers: {
+              'ngrok-skip-browser-warning': 'true',
+            },
+          }
+        );
+      } catch (err) {
+        console.error('Ошибка при отправке сообщения:', err);
+      }
+
+      setText('');
+    }
   };
 
-  export default ChatRoom;
+  const handleAddUser = async (userId) => {
+    try {
+      await axios.post(
+        `https://c45d-188-113-200-157.ngrok-free.app/api/groups/${groupId}/add-user`,
+        {
+          userId,
+          requesterId: currentUser._id,
+        },
+        {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+          },
+        }
+      );
+
+      alert('Пользователь добавлен!');
+      setGroup((prev) => ({
+        ...prev,
+        users: [...prev.users, { _id: userId }],
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Ошибка');
+    }
+  };
+
+  if (!group) return <p>Загрузка группы...</p>;
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>{group.name}</h2>
+
+      <div
+        style={{
+          maxHeight: '300px',
+          overflowY: 'auto',
+          border: '1px solid #ccc',
+          padding: '10px',
+        }}
+      >
+        {messages.map((msg, idx) => {
+          const senderId = msg.sender?._id || msg.sender;
+          const senderName =
+            typeof msg.sender === 'object' && msg.sender?.name
+              ? msg.sender.name
+              : 'Неизвестный';
+
+          const createdAt = msg.createdAt ? new Date(msg.createdAt) : null;
+          const timeString =
+            createdAt?.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) || '—';
+
+          return (
+            <div key={idx}>
+              <strong>
+                {senderId === currentUser._id ? 'Вы' : senderName}
+              </strong>
+              : {msg.text}
+              <span style={{ float: 'right', fontSize: '0.8em' }}>
+                {timeString}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <input
+        type="text"
+        placeholder="Написать сообщение"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <button onClick={handleSend}>Отправить</button>
+
+      {isAdmin && (
+        <div style={{ marginTop: '20px' }}>
+          <h4>Добавить пользователя в группу:</h4>
+          {allUsers
+            .filter((u) => !group.users.some((gu) => gu._id === u._id))
+            .map((u) => (
+              <div key={u._id} style={{ marginBottom: '5px' }}>
+                {u.name}
+                <button
+                  style={{ marginLeft: '10px' }}
+                  onClick={() => handleAddUser(u._id)}
+                >
+                  Добавить
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ChatRoom;

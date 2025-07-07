@@ -2,18 +2,18 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './connectDB.js';
+import connectDB from './utils/connectDB.js';
 
 import userRoutes from './routes/user.routes.js';
 import groupRoutes from './routes/group.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import videoRoutes from './routes/video.routes.js';
 
-import { initSocket } from './socket.js';
+import { initSocket } from './utils/socket.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({ origin: '*' , credentials: true }));
 
 app.use(express.json());
 

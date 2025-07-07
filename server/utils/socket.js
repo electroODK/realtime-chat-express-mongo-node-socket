@@ -1,8 +1,8 @@
 // socket.js
 import { Server } from 'socket.io';
-import MessageModel from './models/message.model.js';
-import GroupModel from './models/group.model.js';
-import VideoChatModel from './models/videochat.model.js';
+import MessageModel from '../models/message.model.js';
+import GroupModel from '../models/group.model.js';
+import VideoChatModel from '../models/videochat.model.js';
 
 let io;
 

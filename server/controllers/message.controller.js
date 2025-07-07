@@ -1,7 +1,7 @@
 import MessageModel from '../models/message.model.js';
 import GroupModel from '../models/group.model.js';
 import UserModel from '../models/user.model.js';
-import { getIO } from '../socket.js';
+import { getIO } from '../utils/socket.js';
 
 export const createMessage = async (req, res) => {
   try {

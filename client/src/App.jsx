@@ -22,7 +22,7 @@ const App = () => {
 
       try {
         const res = await fetch(
-          `https://3d2f-5-133-123-139.ngrok-free.app/api/groups/by-user/${currentUser._id}`,
+          `https://c45d-188-113-200-157.ngrok-free.app/api/groups/by-user/${currentUser._id}`,
           {
             headers: {
               'ngrok-skip-browser-warning': 'true',
@@ -52,7 +52,9 @@ const App = () => {
             <Login onSuccess={handleLoginOrRegister} />
             <p>
               Нет аккаунта?{' '}
-              <button onClick={() => setShowLogin(false)}>Зарегистрироваться</button>
+              <button onClick={() => setShowLogin(false)}>
+                Зарегистрироваться
+              </button>
             </p>
           </>
         ) : (
