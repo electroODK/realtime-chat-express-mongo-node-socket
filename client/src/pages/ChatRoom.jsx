@@ -31,7 +31,7 @@ const VideoChat = ({ roomId, currentUser }) => {
       }
 
       socket.emit('join-video-room', {
-        roomId: 'test-room',
+        roomId,
         userId: currentUser._id,
       });
 
