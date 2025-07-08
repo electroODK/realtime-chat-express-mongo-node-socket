@@ -9,7 +9,7 @@ const socket = io('https://3b1d208aefe0.ngrok-free.app', {
 const VideoChat = ({ roomId, currentUser }) => {
   const [peers, setPeers] = useState([]);
   const userVideo = useRef();
-  const peersRef = useRef([]);
+  const peersRef = useRef({});
   const streamRef = useRef();
 
   useEffect(() => {
@@ -36,36 +36,32 @@ const VideoChat = ({ roomId, currentUser }) => {
       });
 
       socket.on('all-users', (users) => {
-        const newPeers = [];
         users.forEach((userId) => {
           const peer = createPeer(userId, socket.id, stream);
-          peersRef.current.push({ peerId: userId, peer });
-          newPeers.push({ peerId: userId, peer });
+          peersRef.current[userId] = peer;
         });
-        setPeers(newPeers);
       });
 
-      socket.on('user-connected', ({ socketId: userId }) => {
-        const peer = addPeer(userId, stream);
-        peersRef.current.push({ peerId: userId, peer });
-        setPeers((prev) => [...prev, { peerId: userId, peer }]);
+      socket.on('user-connected', ({ socketId }) => {
+        const peer = addPeer(socketId, stream);
+        peersRef.current[socketId] = peer;
       });
 
       socket.on('signal', ({ from, signal }) => {
-        const item = peersRef.current.find((p) => p.peerId === from);
-        if (item) item.peer.signal(signal);
+        const peer = peersRef.current[from];
+        if (peer) peer.signal(signal);
       });
 
       socket.on('return-signal', ({ from, signal }) => {
-        const item = peersRef.current.find((p) => p.peerId === from);
-        if (item) item.peer.signal(signal);
+        const peer = peersRef.current[from];
+        if (peer) peer.signal(signal);
       });
 
       socket.on('user-disconnected', (userId) => {
-        const peerObj = peersRef.current.find((p) => p.peerId === userId);
-        if (peerObj) peerObj.peer.destroy();
+        const peer = peersRef.current[userId];
+        if (peer) peer.destroy();
 
-        peersRef.current = peersRef.current.filter((p) => p.peerId !== userId);
+        delete peersRef.current[userId];
         setPeers((prev) => prev.filter((p) => p.peerId !== userId));
       });
     };
@@ -75,34 +71,26 @@ const VideoChat = ({ roomId, currentUser }) => {
     return () => {
       socket.disconnect();
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      peersRef.current.forEach(({ peer }) => peer.destroy());
+      Object.values(peersRef.current).forEach((peer) => peer.destroy());
     };
   }, [roomId, currentUser._id]);
 
   const createPeer = (targetId, callerId, stream) => {
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream,
-    });
+    const peer = new Peer({ initiator: true, trickle: false, stream });
 
     peer.on('signal', (signal) => {
-      socket.emit('signal', {
-        to: targetId,
-        from: callerId,
-        signal,
-      });
+      socket.emit('signal', { to: targetId, from: callerId, signal });
+    });
+
+    peer.on('stream', (remoteStream) => {
+      setPeers((prev) => [...prev, { peerId: targetId, stream: remoteStream }]);
     });
 
     return peer;
   };
 
   const addPeer = (incomingId, stream) => {
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream,
-    });
+    const peer = new Peer({ initiator: false, trickle: false, stream });
 
     peer.on('signal', (signal) => {
       socket.emit('return-signal', {
@@ -110,6 +98,10 @@ const VideoChat = ({ roomId, currentUser }) => {
         from: socket.id,
         signal,
       });
+    });
+
+    peer.on('stream', (remoteStream) => {
+      setPeers((prev) => [...prev, { peerId: incomingId, stream: remoteStream }]);
     });
 
     return peer;
@@ -127,22 +119,20 @@ const VideoChat = ({ roomId, currentUser }) => {
           width={200}
           style={{ border: '2px solid green' }}
         />
-        {peers.map(({ peerId, peer }) => (
-          <Video key={peerId} peer={peer} />
+        {peers.map(({ peerId, stream }) => (
+          <Video key={peerId} stream={stream} />
         ))}
       </div>
     </div>
   );
 };
 
-const Video = ({ peer }) => {
+const Video = ({ stream }) => {
   const ref = useRef();
 
   useEffect(() => {
-    peer.on('stream', (stream) => {
-      if (ref.current) ref.current.srcObject = stream;
-    });
-  }, [peer]);
+    if (ref.current) ref.current.srcObject = stream;
+  }, [stream]);
 
   return <video ref={ref} autoPlay playsInline width={200} />;
 };
