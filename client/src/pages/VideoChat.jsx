@@ -130,20 +130,22 @@ const VideoChat = ({ roomId, currentUser }) => {
   );
 };
 
-const Video = ({ peerId, peer }) => {
+const Video = ({ peer }) => {
   const ref = useRef();
   const [streamReady, setStreamReady] = useState(false);
 
   useEffect(() => {
-    peer.on('stream', (stream) => {
+    const handleStream = (stream) => {
       if (ref.current) {
         ref.current.srcObject = stream;
-        setStreamReady(true); // 🚀 Только теперь отображать видео
+        setStreamReady(true); // 👉 теперь мы знаем, что можно показать видео
       }
-    });
+    };
+
+    peer.on('stream', handleStream);
 
     return () => {
-      peer.removeAllListeners('stream');
+      peer.removeListener('stream', handleStream);
     };
   }, [peer]);
 
