@@ -101,7 +101,10 @@ const VideoChat = ({ roomId, currentUser }) => {
     });
 
     peer.on('stream', (remoteStream) => {
-      setPeers((prev) => [...prev, { peerId: incomingId, stream: remoteStream }]);
+      setPeers((prev) => [
+        ...prev,
+        { peerId: incomingId, stream: remoteStream },
+      ]);
     });
 
     return peer;
@@ -119,22 +122,42 @@ const VideoChat = ({ roomId, currentUser }) => {
           width={200}
           style={{ border: '2px solid green' }}
         />
-        {peers.map(({ peerId, stream }) => (
-          <Video key={peerId} stream={stream} />
+        {peers.map(({ peerId, peer }) => (
+          <Video key={peerId} peerId={peerId} peer={peer} />
         ))}
       </div>
     </div>
   );
 };
 
-const Video = ({ stream }) => {
+const Video = ({ peerId, peer }) => {
   const ref = useRef();
+  const [streamReady, setStreamReady] = useState(false);
 
   useEffect(() => {
-    if (ref.current) ref.current.srcObject = stream;
-  }, [stream]);
+    peer.on('stream', (stream) => {
+      if (ref.current) {
+        ref.current.srcObject = stream;
+        setStreamReady(true); // 🚀 Только теперь отображать видео
+      }
+    });
 
-  return <video ref={ref} autoPlay playsInline width={200} />;
+    return () => {
+      peer.removeAllListeners('stream');
+    };
+  }, [peer]);
+
+  if (!streamReady) return null;
+
+  return (
+    <video
+      ref={ref}
+      autoPlay
+      playsInline
+      width={200}
+      style={{ border: '2px solid blue' }}
+    />
+  );
 };
 
 export default VideoChat;
