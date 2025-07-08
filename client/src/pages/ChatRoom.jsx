@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io('https://3b1d208aefe0.ngrok-free.app', {
-  transports: ['websocket'],
-});
+import socket from '../socket';
 
 const ChatRoom = ({ groupId, currentUser }) => {
   const [group, setGroup] = useState(null);
