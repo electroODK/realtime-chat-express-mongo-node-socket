@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 
-import socket from '../socket';
+import socket from '../socket.js';
 
 const VideoChat = ({ roomId, currentUser }) => {
   const [peers, setPeers] = useState([]);
