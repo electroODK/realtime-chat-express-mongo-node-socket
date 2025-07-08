@@ -9,8 +9,8 @@ const socket = io('https://3b1d208aefe0.ngrok-free.app', {
 const VideoChat = ({ roomId, currentUser }) => {
   const [peers, setPeers] = useState([]);
   const userVideo = useRef();
-  const peersRef = useRef({});
   const streamRef = useRef();
+  const peersRef = useRef([]);
 
   useEffect(() => {
     const init = async () => {
@@ -36,32 +36,63 @@ const VideoChat = ({ roomId, currentUser }) => {
       });
 
       socket.on('all-users', (users) => {
+        const newPeers = [];
+
         users.forEach((userId) => {
           const peer = createPeer(userId, socket.id, stream);
-          peersRef.current[userId] = peer;
+
+          peersRef.current.push({ peerId: userId, peer });
+
+          newPeers.push({ peerId: userId, peer, stream: null });
+
+          peer.on('stream', (remoteStream) => {
+            setPeers((prev) =>
+              prev.map((p) =>
+                p.peerId === userId ? { ...p, stream: remoteStream } : p
+              )
+            );
+          });
+        });
+
+        setPeers(newPeers);
+      });
+
+      socket.on('user-connected', ({ socketId: userId }) => {
+        const peer = addPeer(userId, stream);
+
+        peersRef.current.push({ peerId: userId, peer });
+
+        setPeers((prev) => [
+          ...prev,
+          { peerId: userId, peer, stream: null },
+        ]);
+
+        peer.on('stream', (remoteStream) => {
+          setPeers((prev) =>
+            prev.map((p) =>
+              p.peerId === userId ? { ...p, stream: remoteStream } : p
+            )
+          );
         });
       });
 
-      socket.on('user-connected', ({ socketId }) => {
-        const peer = addPeer(socketId, stream);
-        peersRef.current[socketId] = peer;
-      });
-
       socket.on('signal', ({ from, signal }) => {
-        const peer = peersRef.current[from];
-        if (peer) peer.signal(signal);
+        const item = peersRef.current.find((p) => p.peerId === from);
+        if (item) item.peer.signal(signal);
       });
 
       socket.on('return-signal', ({ from, signal }) => {
-        const peer = peersRef.current[from];
-        if (peer) peer.signal(signal);
+        const item = peersRef.current.find((p) => p.peerId === from);
+        if (item) item.peer.signal(signal);
       });
 
       socket.on('user-disconnected', (userId) => {
-        const peer = peersRef.current[userId];
-        if (peer) peer.destroy();
+        const peerObj = peersRef.current.find((p) => p.peerId === userId);
+        if (peerObj) peerObj.peer.destroy();
 
-        delete peersRef.current[userId];
+        peersRef.current = peersRef.current.filter(
+          (p) => p.peerId !== userId
+        );
         setPeers((prev) => prev.filter((p) => p.peerId !== userId));
       });
     };
@@ -71,26 +102,34 @@ const VideoChat = ({ roomId, currentUser }) => {
     return () => {
       socket.disconnect();
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      Object.values(peersRef.current).forEach((peer) => peer.destroy());
+      peersRef.current.forEach(({ peer }) => peer.destroy());
     };
   }, [roomId, currentUser._id]);
 
   const createPeer = (targetId, callerId, stream) => {
-    const peer = new Peer({ initiator: true, trickle: false, stream });
-
-    peer.on('signal', (signal) => {
-      socket.emit('signal', { to: targetId, from: callerId, signal });
+    const peer = new Peer({
+      initiator: true,
+      trickle: false,
+      stream,
     });
 
-    peer.on('stream', (remoteStream) => {
-      setPeers((prev) => [...prev, { peerId: targetId, stream: remoteStream }]);
+    peer.on('signal', (signal) => {
+      socket.emit('signal', {
+        to: targetId,
+        from: callerId,
+        signal,
+      });
     });
 
     return peer;
   };
 
   const addPeer = (incomingId, stream) => {
-    const peer = new Peer({ initiator: false, trickle: false, stream });
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream,
+    });
 
     peer.on('signal', (signal) => {
       socket.emit('return-signal', {
@@ -98,13 +137,6 @@ const VideoChat = ({ roomId, currentUser }) => {
         from: socket.id,
         signal,
       });
-    });
-
-    peer.on('stream', (remoteStream) => {
-      setPeers((prev) => [
-        ...prev,
-        { peerId: incomingId, stream: remoteStream },
-      ]);
     });
 
     return peer;
@@ -122,34 +154,24 @@ const VideoChat = ({ roomId, currentUser }) => {
           width={200}
           style={{ border: '2px solid green' }}
         />
-        {peers.map(({ peerId, peer }) => (
-          <Video key={peerId} peerId={peerId} peer={peer} />
-        ))}
+        {peers.map(({ peerId, stream }) =>
+          stream ? (
+            <Video key={peerId} stream={stream} />
+          ) : null
+        )}
       </div>
     </div>
   );
 };
 
-const Video = ({ peer }) => {
+const Video = ({ stream }) => {
   const ref = useRef();
-  const [streamReady, setStreamReady] = useState(false);
 
   useEffect(() => {
-    const handleStream = (stream) => {
-      if (ref.current) {
-        ref.current.srcObject = stream;
-        setStreamReady(true); // 👉 теперь мы знаем, что можно показать видео
-      }
-    };
-
-    peer.on('stream', handleStream);
-
-    return () => {
-      peer.removeListener('stream', handleStream);
-    };
-  }, [peer]);
-
-  if (!streamReady) return null;
+    if (ref.current && stream) {
+      ref.current.srcObject = stream;
+    }
+  }, [stream]);
 
   return (
     <video
