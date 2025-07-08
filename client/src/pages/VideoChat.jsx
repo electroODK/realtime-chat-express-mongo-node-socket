@@ -147,11 +147,9 @@ const VideoChat = ({ roomId, currentUser }) => {
           width={200}
           style={{ border: '2px solid green' }}
         />
-        {peers.map(({ peerId, stream }) =>
-          stream ? <Video key={peerId} stream={stream} /> : null
-        )}
         {peers.map(({ peerId, stream }) => (
           <div key={peerId}>
+            <Video key={peerId} stream={stream} />
             <p>{peerId}</p>
             <Video stream={stream} />
           </div>
