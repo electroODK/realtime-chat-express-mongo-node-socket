@@ -60,10 +60,7 @@ const VideoChat = ({ roomId, currentUser }) => {
 
         peersRef.current.push({ peerId: userId, peer });
 
-        setPeers((prev) => [
-          ...prev,
-          { peerId: userId, peer, stream: null },
-        ]);
+        setPeers((prev) => [...prev, { peerId: userId, peer, stream: null }]);
 
         peer.on('stream', (remoteStream) => {
           setPeers((prev) =>
@@ -88,9 +85,7 @@ const VideoChat = ({ roomId, currentUser }) => {
         const peerObj = peersRef.current.find((p) => p.peerId === userId);
         if (peerObj) peerObj.peer.destroy();
 
-        peersRef.current = peersRef.current.filter(
-          (p) => p.peerId !== userId
-        );
+        peersRef.current = peersRef.current.filter((p) => p.peerId !== userId);
         setPeers((prev) => prev.filter((p) => p.peerId !== userId));
       });
     };
@@ -153,10 +148,14 @@ const VideoChat = ({ roomId, currentUser }) => {
           style={{ border: '2px solid green' }}
         />
         {peers.map(({ peerId, stream }) =>
-          stream ? (
-            <Video key={peerId} stream={stream} />
-          ) : null
+          stream ? <Video key={peerId} stream={stream} /> : null
         )}
+        {peers.map(({ peerId, stream }) => (
+          <div key={peerId}>
+            <p>{peerId}</p>
+            <Video stream={stream} />
+          </div>
+        ))}
       </div>
     </div>
   );
