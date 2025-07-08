@@ -139,14 +139,14 @@ const VideoChat = ({ roomId, currentUser }) => {
     <div>
       <h3>Комната видеочата: {roomId}</h3>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-        <video
+        {/* <video
           ref={userVideo}
           autoPlay
           muted
           playsInline
           width={200}
           style={{ border: '2px solid green' }}
-        />
+        /> */}
         {peers.map(({ peerId, stream }) => (
           <div key={peerId}>
             <Video key={peerId} stream={stream} />
