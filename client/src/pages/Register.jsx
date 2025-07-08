@@ -19,7 +19,7 @@ const Register = ({ onSuccess }) => {
 
     try {
       const res = await axios.post(
-        'https://c45d-188-113-200-157.ngrok-free.app/api/users/register',
+        'https://3b1d208aefe0.ngrok-free.app/api/users/register',
         form,
         {
           headers: {

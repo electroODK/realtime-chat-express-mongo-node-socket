@@ -33,7 +33,7 @@ const App = () => {
 
       try {
         const res = await fetch(
-          `https://c45d-188-113-200-157.ngrok-free.app/api/groups/by-user/${currentUser._id}`,
+          `https://3b1d208aefe0.ngrok-free.app/api/groups/by-user/${currentUser._id}`,
           {
             headers: {
               'ngrok-skip-browser-warning': 'true',

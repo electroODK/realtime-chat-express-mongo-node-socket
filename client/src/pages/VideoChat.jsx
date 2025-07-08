@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 
-const socket = io('https://c45d-188-113-200-157.ngrok-free.app', {
+const socket = io('https://3b1d208aefe0.ngrok-free.app', {
   transports: ['websocket'],
 });
 

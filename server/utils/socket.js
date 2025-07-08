@@ -46,7 +46,6 @@ export const initSocket = (server) => {
       }
     });
 
-    // ==== Видео-комната ====
     socket.on('join-video-room', (data) => {
       if (!data || !data.roomId || !data.userId) {
         console.warn('⚠️ join-video-room: Некорректные данные', data);
@@ -94,7 +93,6 @@ socket.on('return-signal', ({ to, from, signal }) => {
         if (usersInRoom[roomId]) {
           usersInRoom[roomId] = usersInRoom[roomId].filter((id) => id !== socket.id);
 
-          // Если в комнате больше никого — удалить ключ
           if (usersInRoom[roomId].length === 0) {
             delete usersInRoom[roomId];
           }
